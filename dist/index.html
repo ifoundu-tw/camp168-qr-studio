@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="在瀏覽器批次製作 CAMP168 商品 QR Code，自訂樣式並分別匯出 PNG 或 SVG。">
+<meta name="author" content="yue">
+<title>CAMP168 QR 工作台</title>
+<link rel="stylesheet" href="style.css">
+<script src="vendor/qr.js" defer></script>
+<script src="vendor/bwip-js.js" defer></script>
+<script src="core.js" defer></script>
+<script src="barcode.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">▦</span><span class="brand-copy"><span>CAMP168</span><small>／ QR 工作台</small><span class="author">by yue</span><span class="app-version" id="appVersion" hidden></span></span></div>
+    <button class="scan-trigger" id="openScan" type="button">掃描圖檔</button>
+  </div>
+</header>
+<main class="wrap app-shell" data-pane="content">
+  <div class="hero"><h1>QR Code 與條碼工作台</h1><p>批次製作 CAMP168 商品 QR Code，或匯出一維與二維條碼。</p></div>
+  <nav class="pane-switcher" aria-label="工作台區域">
+    <button type="button" data-pane-target="content" aria-pressed="true">內容</button>
+    <button type="button" data-pane-target="design" aria-pressed="false">外觀</button>
+    <button type="button" data-pane-target="preview" aria-pressed="false">預覽與匯出</button>
+  </nav>
+  <div class="workspace">
+    <div class="editor">
+      <section class="panel source">
+        <div class="section-heading"><h2>內容</h2><div class="seg mode" role="group" aria-label="內容模式"><button type="button" data-mode="batch" aria-pressed="true">商品批次</button><button type="button" data-mode="single" aria-pressed="false">單筆 QR</button><button type="button" data-mode="barcode" aria-pressed="false">條碼／Barcode</button></div></div>
+        <div id="batchFields">
+          <label for="base">商品網址前綴</label>
+          <input id="base" type="url" value="https://www.camp168.com/searchall-products/?keywords=" spellcheck="false">
+          <div class="inline-label"><label for="suffix">商品尾綴</label><label class="file-button" for="suffixFile">匯入 TXT / CSV</label><input class="hidden-file" id="suffixFile" type="file" accept=".txt,.csv,text/plain,text/csv"></div>
+          <textarea id="suffix" rows="3" spellcheck="false" aria-describedby="batchHint">ntg247
+ntg50
+ntg102</textarea>
+          <div class="input-note"><span id="batchHint">可用換行、空格或逗號分隔</span><strong id="count"></strong></div>
+        </div>
+        <div id="singleFields" hidden>
+          <label for="contentType">內容類型</label>
+          <select id="contentType"><option value="url">網址</option><option value="text">文字</option><option value="wifi">Wi-Fi</option><option value="email">電子郵件</option><option value="phone">電話</option><option value="sms">簡訊</option></select>
+          <div id="singleInputs"></div>
+        </div>
+        <div id="barcodeFields" hidden>
+          <label for="barcodeType">條碼類型</label>
+          <select id="barcodeType" aria-describedby="barcodeHint"></select>
+          <p class="message" id="barcodeHint"></p>
+          <div class="inline-label">
+            <label for="barcodeContent">條碼內容</label>
+            <div class="inline-actions"><button class="plain" id="barcodeExample" type="button">帶入範例</button><label class="file-button" for="barcodeFile">匯入 TXT／CSV</label><input class="hidden-file" id="barcodeFile" type="file" accept=".txt,.csv,text/plain,text/csv"></div>
+          </div>
+          <textarea id="barcodeContent" rows="4" spellcheck="false" aria-describedby="barcodeInputHint"></textarea>
+          <div class="input-note"><span id="barcodeInputHint">一行一筆，保留前導零和行內空格</span><strong id="barcodeCount"></strong></div>
+        </div>
+        <p class="message error" id="inputError" role="alert" hidden></p>
+      </section>
+      <section class="panel design" id="qrDesign">
+        <div class="section-heading"><h2>外觀設計</h2><button type="button" class="plain" id="reset">重設樣式</button></div>
+        <div class="tabs" role="group" aria-label="設計設定"><button type="button" data-tab="style" aria-pressed="true">樣式</button><button type="button" data-tab="center" aria-pressed="false">中央標記</button><button type="button" data-tab="advanced" aria-pressed="false">進階</button></div>
+        <div id="styleTab">
+          <div class="inline-label"><strong>樣式模板</strong><span class="subtle" id="presetName"></span></div>
+          <div id="presets" class="presets" role="group" aria-label="樣式模板"></div>
+          <div class="settings-grid">
+            <label>格點形狀<select data-setting="module"><option value="square">方格</option><option value="soft">小圓角</option><option value="dot">圓點</option><option value="diamond">菱形</option></select></label>
+            <label>上色方式<select data-setting="paint"><option value="solid">單色</option><option value="linear">線性漸層</option><option value="radial">放射漸層</option></select></label>
+            <label>QR 主色<input type="color" data-setting="ink"></label>
+            <label id="ink2Field">漸層副色<input type="color" data-setting="ink2"></label>
+            <label>背景色<input type="color" data-setting="bg"></label>
+            <label id="angleField">漸層方向<select data-setting="angle"><option value="right">水平</option><option value="down">垂直</option><option value="diag">斜向</option></select></label>
+          </div>
+          <label class="check"><input type="checkbox" data-setting="transparent">輸出透明背景</label>
+        </div>
+        <div id="centerTab" hidden>
+          <div class="settings-grid">
+            <label>中央內容<select data-setting="center"><option value="digits">自動放尾綴數字</option><option value="text">自訂文字</option><option value="logo">上傳 Logo</option><option value="none">無</option></select></label>
+            <label>白底形狀<select data-setting="badge"><option value="square">矩形</option><option value="pill">膠囊</option><option value="oval">橢圓</option><option value="circle">圓形</option><option value="cut">切角</option><option value="shield">盾形</option></select></label>
+            <label>白底寬度 <output id="widthValue">30%</output><input data-setting="width" type="range" min="10" max="65" step="1"></label>
+            <label>數字顏色<input type="color" data-setting="textColor"></label>
+            <label id="fontField">字體<select id="fontFamily" data-setting="font"><option value="sans">預設粗黑體</option><option value="serif">預設襯線</option><option value="mono">預設等寬</option><option value="narrow">預設窄體</option></select></label>
+            <label id="fontSizeField">字體大小 <output id="fontSizeValue"></output><input type="range" data-setting="fontSize" min="0" max="2048" step="1" aria-describedby="fontSizeHint"><span class="subtle" id="fontSizeHint">以匯出圖檔為準。拉到最左為自動，上限會隨白底調整。</span></label>
+            <label id="textField">中央自訂文字<input data-setting="text" type="text" maxlength="22" placeholder="例如 CAMP168"></label>
+          </div>
+          <label id="logoField">上傳 Logo<input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+          <div class="settings-grid">
+            <label>水平偏移 <output id="xValue"></output><input data-setting="x" type="range" min="-12" max="12"></label>
+            <label>垂直偏移 <output id="yValue"></output><input data-setting="y" type="range" min="-12" max="12"></label>
+          </div>
+        </div>
+        <div id="advancedTab" hidden>
+          <div class="settings-grid">
+            <label>定位框外形<select data-setting="outer"><option value="square">方形</option><option value="soft">圓角</option><option value="round">大圓角</option></select></label>
+            <label>外框顏色<input type="color" data-setting="eyeOuter"></label>
+            <label>定位框內形<select data-setting="inner"><option value="square">方形</option><option value="soft">圓角</option><option value="round">圓形</option></select></label>
+            <label>內框顏色<input type="color" data-setting="eyeInner"></label>
+            <label>容錯等級<select data-setting="ecc"><option value="H">H・高</option><option value="Q">Q・中高</option><option value="M">M・中</option><option value="L">L・低</option></select></label>
+            <label>QR 版本<input type="number" min="0" max="40" step="1" data-setting="version"><span class="subtle">0 為自動</span></label>
+            <label>四周留白<input type="number" min="4" max="16" step="1" data-setting="margin"><span class="subtle">以格點為單位</span></label>
+            <label>外加標籤<input type="text" data-setting="frame" maxlength="30" placeholder="例如 掃描看商品"></label>
+          </div>
+          <div class="template-tools">
+            <label for="savedTemplates">我的模板</label>
+            <select id="savedTemplates"><option value="">選擇已儲存的模板</option></select>
+            <label for="templateName">模板名稱</label><input id="templateName" maxlength="40" type="text" placeholder="例如 CAMP168 商品標籤">
+            <div class="tool-buttons"><button type="button" id="saveTemplate">儲存目前樣式</button><button type="button" id="exportTemplate">匯出 JSON</button><label class="file-button" for="templateFile">匯入 JSON</label><input class="hidden-file" type="file" id="templateFile" accept=".json,application/json"></div>
+            <p class="message" id="templateStatus" role="status" hidden></p>
+          </div>
+        </div>
+      </section>
+      <section class="panel design" id="barcodeDesign" hidden>
+        <div class="section-heading"><h2>條碼外觀</h2><button class="plain" type="button" id="resetBarcode">重設樣式</button></div>
+        <div class="settings-grid">
+          <label>主體色<input type="color" data-barcode-setting="ink" value="#000000"></label>
+          <label>背景色<input type="color" data-barcode-setting="bg" value="#ffffff"></label>
+          <label>左右留白<input type="number" min="0" max="100" step="1" data-barcode-setting="marginX" value="12"></label>
+          <label>上下留白<input type="number" min="0" max="100" step="1" data-barcode-setting="marginY" value="8"></label>
+          <label id="barcodeHeightField">條形高度（mm）<input type="number" min="3" max="100" step="0.5" data-barcode-setting="height" value="20"></label>
+        </div>
+        <label class="check"><input type="checkbox" data-barcode-setting="transparent">透明背景</label>
+        <div id="barcodeTextFields">
+          <label class="check"><input type="checkbox" data-barcode-setting="text" checked>顯示條碼下方文字</label>
+          <div class="settings-grid barcode-text-grid" id="barcodeTextSettings">
+            <label>字型<select id="barcodeFont" data-barcode-setting="font"><option value="default">條碼預設字型</option></select></label>
+            <label>字體大小（pt）<input type="number" min="5" max="32" step="1" data-barcode-setting="textSize" value="10"></label>
+            <label>文字間距<input type="number" min="0" max="20" step="1" data-barcode-setting="textGap" value="2"></label>
+            <label>與條碼距離（px）<input type="number" min="0" max="200" step="1" data-barcode-setting="textDistance" value="8"></label>
+            <label class="barcode-custom-text">自訂文字<input type="text" maxlength="120" data-barcode-setting="textOverride" placeholder="例如 商品 {內容}"><span class="subtle">留空顯示原本的條碼文字，{內容} 會代入每筆資料。</span></label>
+          </div>
+        </div>
+      </section>
+    </div>
+    <aside class="panel preview">
+      <div class="preview-body">
+      <div class="section-heading"><h2>即時預覽</h2></div>
+      <div class="preview-stage" id="stage"><img id="qrImage" alt=""><p id="empty" hidden>輸入內容後顯示 QR Code</p></div>
+      <div class="verify" id="verification" role="status" aria-atomic="true" hidden>
+        <strong id="verifyStatus"></strong><p id="verifyHint" hidden></p>
+      </div>
+      <div class="dest"><label for="previewItem">預覽項目</label><select id="previewItem"></select><p id="target"></p></div>
+      </div>
+      <div class="export">
+        <div class="settings-grid"><label>下載格式<select id="format"><option value="png">PNG 圖檔</option><option value="svg">SVG 向量</option></select></label><label>影像寬度<select id="size"><option value="512">512 px</option><option value="1024" selected>1024 px</option><option value="2048">2048 px</option></select></label></div>
+        <div class="download-buttons"><button type="button" id="downloadOne">下載這張</button><button type="button" class="primary" id="downloadAll">匯出整批圖檔</button></div>
+        <p class="message" id="exportStatus" role="status" hidden></p>
+        <div id="fileList" class="file-list" hidden></div>
+      </div>
+    </aside>
+  </div>
+</main>
+<dialog id="scanDialog">
+  <form method="dialog" class="section-heading"><h2>掃描條碼圖檔</h2><button type="submit">關閉</button></form>
+  <label for="scanFile">選擇含 QR Code 或條碼的圖片</label><input type="file" id="scanFile" accept="image/*">
+  <p class="message" id="scanStatus" role="status" hidden></p><div id="scanResults"></div>
+</dialog>
+</body>
+</html>
