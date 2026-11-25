@@ -19,7 +19,7 @@ using Microsoft.Web.WebView2.WinForms;
 [assembly: AssemblyProduct(Program.UpdateProductName)]
 [assembly: AssemblyCompany("yue")]
 [assembly: AssemblyCopyright("by yue")]
-[assembly: AssemblyVersion("1.11.0.0")]
+[assembly: AssemblyVersion("1.11.1.0")]
 
 internal static class Program
 {

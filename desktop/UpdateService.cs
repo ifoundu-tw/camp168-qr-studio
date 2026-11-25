@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -52,6 +53,11 @@ internal static class UpdateService
 
     private static HttpClient NewClient()
     {
+        // The legacy compiler can leave .NET Framework using only SSL 3.0 and TLS 1.0.
+        const SecurityProtocolType systemDefault = (SecurityProtocolType)0;
+        var protocols = ServicePointManager.SecurityProtocol;
+        if (protocols != systemDefault && (protocols & SecurityProtocolType.Tls12) == 0)
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         var client = new HttpClient();
         client.DefaultRequestHeaders.UserAgent.ParseAdd("Camp168QrStudio/" + Program.CurrentVersion.ToString(3));
         return client;
