@@ -28,3 +28,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+HEIC and HEIF decoding uses libheif-js 1.23.5 (LGPL-3.0).
+The bundled browser JavaScript and embedded WebAssembly are unmodified from the npm release.
+Package and usage: https://www.npmjs.com/package/libheif-js/v/1.23.5
+Build scripts: https://github.com/catdad-experiments/libheif-js
+Underlying library and license: https://github.com/strukturag/libheif
+The library can be replaced in a local build by swapping dist/vendor/libheif-bundle.js.
+See LICENSE-libheif.txt for license terms.

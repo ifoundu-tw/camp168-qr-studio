@@ -12,6 +12,7 @@
 <script src="core.js" defer></script>
 <script src="barcode.js" defer></script>
 <script src="momo.js" defer></script>
+<script src="convert.js" defer></script>
 <script src="split.js" defer></script>
 <script src="rename.js" defer></script>
 <script src="changes.js" defer></script>
@@ -168,6 +169,7 @@ ntg102</textarea>
     <nav class="image-switcher" aria-label="改圖轉檔功能">
       <button type="button" data-image-tool="momoTool" aria-pressed="true">MOMO 圖片批次</button>
       <button type="button" data-image-tool="splitTool" aria-pressed="false">圖片拆分</button>
+      <button type="button" data-image-tool="convertTool" aria-pressed="false">通用圖片轉檔</button>
     </nav>
   <section id="momoTool" class="tool-view image-tool" data-tool-pane="input">
     <div class="hero"><h1>MOMO 圖片批次</h1><p>1000 × 1000 JPG · 等比例置中補白 · 低於 500,000 bytes</p></div>
@@ -218,10 +220,11 @@ ntg102</textarea>
           <label>拆分方式<select id="splitMode"><option value="horizontal">水平均分（切欄）</option><option value="vertical">垂直均分（切列）</option><option value="pixels">像素拆分</option><option value="grid">等比均分（欄 × 列）</option></select></label>
           <label><span id="splitFirstLabel">水平份數</span><input id="splitFirst" type="number" min="1" max="2147483647" step="1" value="2"></label>
           <label id="splitSecondField" hidden><span id="splitSecondLabel">列數</span><input id="splitSecond" type="number" min="1" max="2147483647" step="1" value="2"></label>
+          <label>輸出格式<select id="splitFormat"><option value="png">PNG（保留透明）</option><option value="jpg">JPG（白底）</option></select></label>
         </div>
         <div class="momo-destination"><button type="button" id="splitFolder">選擇輸出資料夾</button><button type="button" id="splitReset" class="plain" hidden>使用預設</button></div>
         <p id="splitDestination">各來源資料夾內的「圖片拆分」子資料夾</p>
-        <div class="momo-actions"><button type="button" class="primary" id="splitStart" disabled>批次拆分 PNG</button><button type="button" id="splitCancel" hidden>停止拆分</button></div>
+        <div class="momo-actions"><button type="button" class="primary" id="splitStart" disabled>批次拆分</button><button type="button" id="splitCancel" hidden>停止拆分</button></div>
       </section>
       <section class="panel split-output">
         <div class="section-heading"><h2>切線預覽</h2></div>
@@ -236,6 +239,37 @@ ntg102</textarea>
         <p id="splitStatus" class="message" role="status" hidden></p>
         <ul id="splitResults" class="momo-results" aria-label="拆分結果" hidden></ul>
         <div class="split-source" id="splitOpenRow" hidden><select id="splitResultFolder" aria-label="選擇拆分結果資料夾"></select><button type="button" id="splitOpen">開啟資料夾</button></div>
+      </section>
+    </div>
+  </section>
+  <section id="convertTool" class="tool-view convert-tool" data-tool-pane="input" hidden>
+    <nav class="tool-switcher" aria-label="通用圖片轉檔工作區">
+      <button type="button" data-tool-pane-target="input" aria-pressed="true">來源與設定</button>
+      <button type="button" data-tool-pane-target="output" aria-pressed="false">轉檔結果</button>
+    </nav>
+    <div class="momo-workspace">
+      <section class="panel convert-input">
+        <div class="section-heading"><h2>來源圖片</h2><button type="button" id="convertClear" class="plain" disabled>清除清單</button></div>
+        <div class="momo-drop" id="convertDrop">
+          <button type="button" id="convertPick">加入圖片</button>
+          <p>可拖放 HEIC、WebP、SVG、AI、PSD 或其他圖片</p>
+        </div>
+        <div class="momo-file-head"><strong id="convertCount">0 個檔案</strong><button type="button" id="convertRemove" class="plain" disabled>移除選取</button></div>
+        <select id="convertFiles" aria-label="來源圖片清單" multiple size="4"></select>
+        <div class="split-fields">
+          <label>輸出格式<select id="convertFormat"><option value="png">PNG（保留透明）</option><option value="jpg">JPG（白底）</option></select></label>
+        </div>
+        <div class="momo-destination"><button type="button" id="convertFolder">選擇輸出資料夾</button><button type="button" id="convertReset" class="plain" hidden>使用預設</button></div>
+        <p id="convertDestination">各來源資料夾內的「轉檔輸出」子資料夾</p>
+        <div class="momo-actions"><button type="button" class="primary" id="convertStart" disabled>開始轉檔</button><button type="button" id="convertCancel" hidden>停止後續檔案</button></div>
+      </section>
+      <section class="panel convert-output">
+        <div class="section-heading"><h2>轉檔結果</h2><button type="button" id="convertCancelNarrow" hidden>停止後續檔案</button></div>
+        <p>動態圖片與多頁 TIFF 轉出第一張。</p>
+        <progress id="convertProgress" max="1" value="0" aria-label="轉檔進度" hidden></progress>
+        <p id="convertStatus" class="message" role="status">加入圖片後即可開始轉檔。</p>
+        <ul id="convertResults" class="momo-results" aria-label="轉檔結果"></ul>
+        <div class="split-source" id="convertOpenRow" hidden><select id="convertResultFolder" aria-label="選擇輸出資料夾"></select><button type="button" id="convertOpen">開啟資料夾</button></div>
       </section>
     </div>
   </section>

@@ -1,3 +1,9 @@
+# 美工必備小工具 by yue v1.12.0
+
+- 【改圖轉檔】新增【通用圖片轉檔】，可批次轉換 HEIC、WebP、AVIF、SVG、PDF、AI、PSD 與其他可解碼圖片。HEIC 內建解碼，其他特殊格式可由 Windows 解碼器補充。
+- 【通用圖片轉檔】與【圖片拆分】皆可選擇 PNG 或 JPG。PNG 保留透明度，JPG 使用白底。
+- 靜態與動態圖片輸出單張，PDF 和可讀取的 AI 可按頁或工作區輸出。
+
 # 美工必備小工具 by yue v1.11.1
 
 - 修正部分 Windows 電腦因 .NET Framework 使用舊版 TLS，無法連線至 GitHub 檢查更新的問題。

@@ -11,16 +11,17 @@ using System.Web.Script.Serialization;
 
 internal static class AdobeRaster
 {
-    internal static string[] ReadIllustrator(string source,string temporary)
+    internal static string[] ReadIllustrator(string source,string temporary,int edge = 1000)
     {
         if (HasPdfArtwork(source))
         {
-            try { return RenderPdf(source,temporary); }
+            try { return RenderPdf(source,temporary,edge); }
             catch (MomoError) { }
         }
         var js = new JavaScriptSerializer();
         string result = Execute("Illustrator.Application","Illustrator",
-            "var source = new File("+js.Serialize(source)+"); var output = "+js.Serialize(temporary.Replace('\\','/'))+";\n"+IllustratorScript);
+            "var source = new File("+js.Serialize(source)+"); var output = "+js.Serialize(temporary.Replace('\\','/'))+
+            "; var edge = "+edge.ToString(CultureInfo.InvariantCulture)+";\n"+IllustratorScript);
         if (result.StartsWith("ERROR:",StringComparison.Ordinal))
             throw new MomoError("Illustrator 無法開啟或匯出這個 AI 檔。請檢查檔案、字型及連結素材。");
         return Rendered(temporary);
@@ -110,7 +111,12 @@ internal static class AdobeRaster
                 RegexOptions.CultureInvariant).Count >= 4;
     }
 
-    private static string[] RenderPdf(string source,string temporary)
+    internal static string[] ReadPdf(string source,string temporary)
+    {
+        return RenderPdf(source,temporary,0);
+    }
+
+    private static string[] RenderPdf(string source,string temporary,int edge)
     {
         // A short-lived Windows worker renders PDF-compatible AI artboards via Windows.Data.Pdf.
         string command = "-NoProfile -NonInteractive -EncodedCommand "+
@@ -121,6 +127,7 @@ internal static class AdobeRaster
         };
         info.EnvironmentVariables["CAMP168_AI_SOURCE"] = source;
         info.EnvironmentVariables["CAMP168_AI_OUTPUT"] = temporary;
+        info.EnvironmentVariables["CAMP168_AI_EDGE"] = edge.ToString(CultureInfo.InvariantCulture);
         using (var worker = Process.Start(info))
         {
             if (worker == null) throw new MomoError("Windows PDF 轉圖未能啟動。");
@@ -134,7 +141,7 @@ internal static class AdobeRaster
             if (worker.ExitCode != 0)
             {
                 foreach (string page in Directory.GetFiles(temporary,"page_*.png")) File.Delete(page);
-                throw new MomoError("Windows 無法讀取 AI 的 PDF 相容內容。");
+                throw new MomoError("Windows 無法讀取這個 PDF 或 AI 相容圖稿。");
             }
         }
         return Rendered(temporary);
@@ -179,7 +186,13 @@ try {
             $stream=Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::ReadWrite)) ([Windows.Storage.Streams.IRandomAccessStream])
             try {
                 $options=[Windows.Data.Pdf.PdfPageRenderOptions]::new()
-                if($page.Size.Width -ge $page.Size.Height){$options.DestinationWidth=1000}else{$options.DestinationHeight=1000}
+                $edge=[uint32]$env:CAMP168_AI_EDGE
+                if($edge -gt 0){
+                    if($page.Size.Width -ge $page.Size.Height){$options.DestinationWidth=$edge}else{$options.DestinationHeight=$edge}
+                } else {
+                    $null=[Windows.UI.Colors, Windows.UI, ContentType=WindowsRuntime]
+                    $options.BackgroundColor=[Windows.UI.Colors]::Transparent
+                }
                 Await ($page.RenderToStreamAsync($stream,$options))
             } finally { $stream.Dispose() }
         } finally { $page.Dispose() }
@@ -205,7 +218,7 @@ try {
       var box=doc.artboards[i].artboardRect;
       var side=Math.max(Math.abs(box[2]-box[0]),Math.abs(box[1]-box[3]));
       if (side<=0) throw new Error('Invalid artboard size');
-      options.horizontalScale=100000/side; options.verticalScale=100000/side;
+      options.horizontalScale=edge>0?100*edge/side:100; options.verticalScale=options.horizontalScale;
       var number=('000000'+(i+1)).slice(-6);
       doc.exportFile(new File(output+'/page_'+number),ExportType.PNG24,options);
     }

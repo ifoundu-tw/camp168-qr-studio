@@ -19,7 +19,7 @@ using Microsoft.Web.WebView2.WinForms;
 [assembly: AssemblyProduct(Program.UpdateProductName)]
 [assembly: AssemblyCompany("yue")]
 [assembly: AssemblyCopyright("by yue")]
-[assembly: AssemblyVersion("1.11.1.0")]
+[assembly: AssemblyVersion("1.12.0.0")]
 
 internal static class Program
 {
@@ -162,6 +162,7 @@ internal sealed partial class StudioForm : Form
             web.Settings.IsStatusBarEnabled = false;
 
             web.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            FormClosed += delegate { ClearConversionUpload(); };
             web.WebResourceRequested += delegate(object sender, CoreWebView2WebResourceRequestedEventArgs eventArgs)
             {
                 var url = new Uri(eventArgs.Request.Uri);
@@ -169,7 +170,14 @@ internal sealed partial class StudioForm : Form
                 var path = url.AbsolutePath;
                 string mime = ContentType(path);
                 Stream stream = null;
-                if (IsAppUri(url))
+                bool conversionSource = path.StartsWith("/convert-image/",StringComparison.Ordinal);
+                if (IsAppUri(url) && conversionSource)
+                {
+                    mime = "application/octet-stream";
+                    if (eventArgs.Request.Method == "GET")
+                        stream = OpenConversionImage(path.Substring("/convert-image/".Length));
+                }
+                else if (IsAppUri(url))
                     stream = path.StartsWith("/tool-image/",StringComparison.Ordinal)
                         ? OpenToolImage(path.Substring("/tool-image/".Length),out mime)
                         : Program.OpenResource("ui" + path);
@@ -179,7 +187,8 @@ internal sealed partial class StudioForm : Form
                     return;
                 }
                 eventArgs.Response = environment.CreateWebResourceResponse(stream, 200, "OK",
-                    "Content-Type: " + mime + "\r\nX-Content-Type-Options: nosniff");
+                    "Content-Type: " + mime + "\r\nX-Content-Type-Options: nosniff" +
+                    (conversionSource ? "\r\nContent-Disposition: attachment\r\nCache-Control: no-store" : ""));
             };
             web.NavigationStarting += delegate(object sender, CoreWebView2NavigationStartingEventArgs eventArgs)
             {

@@ -31,7 +31,8 @@ internal sealed partial class StudioForm
             case "toolDrop": return AddToolFiles(e.AdditionalObjects.OfType<CoreWebView2File>().Select(f=>f.Path),tool);
             case "toolFolder": return ChooseToolFolder(tool);
             case "toolOpen":
-                var folders = tool == "momo" ? momoResultFolders : tool == "split" ? splitResultFolders : renameResultFolders;
+                var folders = tool == "momo" ? momoResultFolders : tool == "split" ? splitResultFolders :
+                    tool == "convert" ? convertResultFolders : renameResultFolders;
                 int index = message.ContainsKey("index") ? Convert.ToInt32(message["index"],CultureInfo.InvariantCulture) : 0;
                 if (index < 0 || index >= folders.Length || !Directory.Exists(folders[index]))
                     throw new MomoError("找不到這個輸出資料夾。");
@@ -50,6 +51,12 @@ internal sealed partial class StudioForm
                 return ImageSplit.Layout(ToolInt(message,"width"),ToolInt(message,"height"),
                     (string)message["mode"],ToolInt(message,"first"),ToolInt(message,"second"));
             case "splitRun": return await RunSplit(message);
+            case "convertReset":
+                ClearConversionUpload();
+                convertResultFolders = new string[0];
+                return true;
+            case "convertFile": case "convertBegin": case "convertChunk": case "convertFinish": case "convertAbort":
+                return await HandleConversion(action,message);
             case "splitCancel":
                 if (splitCancellation != null) splitCancellation.Cancel();
                 return true;
@@ -73,11 +80,12 @@ internal sealed partial class StudioForm
     {
 #if QA
         string fixture = Environment.GetEnvironmentVariable(tool == "momo" ? "CAMP168_QA_MOMO" :
-            tool == "split" ? "CAMP168_QA_SPLIT" : "CAMP168_QA_RENAME");
+            tool == "split" ? "CAMP168_QA_SPLIT" : tool == "convert" ? "CAMP168_QA_CONVERT" : "CAMP168_QA_RENAME");
         if (!String.IsNullOrEmpty(fixture)) return fixture.Split('|');
 #endif
         using (var picker = new OpenFileDialog {
-            Title = tool == "momo" ? "選擇要轉換的圖片" : tool == "split" ? "選擇要拆分的圖片" : "選擇要重新命名的檔案",
+            Title = tool == "momo" || tool == "convert" ? "選擇要轉換的圖片" :
+                tool == "split" ? "選擇要拆分的圖片" : "選擇要重新命名的檔案",
             Multiselect = true, CheckFileExists = true,
             Filter = tool == "momo"
                 ? "支援的圖片|*.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.ai;*.psd|所有檔案|*.*"
@@ -104,6 +112,7 @@ internal sealed partial class StudioForm
                 toolIds.Add(path,id);
                 toolPaths.Add(id,path);
             }
+            if (tool == "convert") converterIds.Add(id);
             items.Add(new { id, name = Path.GetFileName(path), extension = Path.GetExtension(path),
                 thumbnail = ThumbnailMime(path) != null || HasNativeThumbnail(path) });
         }
@@ -112,11 +121,12 @@ internal sealed partial class StudioForm
 
     private string ChooseToolFolder(string tool)
     {
-        string current = tool == "momo" ? momoFolder : tool == "split" ? splitFolder : renameFolder;
+        string current = tool == "momo" ? momoFolder : tool == "split" ? splitFolder :
+            tool == "convert" ? convertFolder : renameFolder;
         string chosen = null;
 #if QA
         chosen = Environment.GetEnvironmentVariable(tool == "momo" ? "CAMP168_QA_MOMO_EXPORT" :
-            tool == "split" ? "CAMP168_QA_SPLIT_EXPORT" : "CAMP168_QA_RENAME_EXPORT");
+            tool == "split" ? "CAMP168_QA_SPLIT_EXPORT" : tool == "convert" ? "CAMP168_QA_CONVERT_EXPORT" : "CAMP168_QA_RENAME_EXPORT");
 #endif
         if (String.IsNullOrEmpty(chosen))
         {
@@ -130,6 +140,7 @@ internal sealed partial class StudioForm
         }
         if (tool == "momo") momoFolder = chosen;
         else if (tool == "split") splitFolder = chosen;
+        else if (tool == "convert") convertFolder = chosen;
         else renameFolder = chosen;
         return chosen;
     }
@@ -149,7 +160,7 @@ internal sealed partial class StudioForm
 
     private async Task<object> RunMomo(Dictionary<string,object> message)
     {
-        if (momoCancellation != null || splitCancellation != null || renaming) throw new MomoError("另一個批次仍在執行。");
+        if (momoCancellation != null || splitCancellation != null || renaming || converting) throw new MomoError("另一個批次仍在執行。");
         string[] files = MessageFiles(message);
         if (files.Any(path=>!MomoBatch.Supports(path))) throw new MomoError("清單含有不支援的格式。");
         string destination = Convert.ToBoolean(message["shared"],CultureInfo.InvariantCulture) ? momoFolder : null;
@@ -179,9 +190,11 @@ internal sealed partial class StudioForm
 
     private async Task<object> RunSplit(Dictionary<string,object> message)
     {
-        if (momoCancellation != null || splitCancellation != null || renaming) throw new MomoError("另一個批次仍在執行。");
+        if (momoCancellation != null || splitCancellation != null || renaming || converting) throw new MomoError("另一個批次仍在執行。");
         string[] files = MessageFiles(message);
         string mode = (string)message["mode"];
+        string format = message.ContainsKey("format") ? message["format"] as string : "png";
+        if (format != "png" && format != "jpg") throw new MomoError("請選擇 JPG 或 PNG。");
         int first = ToolInt(message,"first"), second = ToolInt(message,"second");
         string destination = Convert.ToBoolean(message["shared"],CultureInfo.InvariantCulture) ? splitFolder : null;
         var progress = new Progress<ImageSplit.Row>(row=>ToolProgress("splitProgress",row));
@@ -191,7 +204,7 @@ internal sealed partial class StudioForm
             try
             {
                 var token = splitCancellation.Token;
-                var result = await Task.Run(()=>ImageSplit.Run(files,destination,mode,first,second,token,progress));
+                var result = await Task.Run(()=>ImageSplit.Run(files,destination,mode,first,second,format,token,progress));
                 splitResultFolders = result.folders;
                 return result;
             }
@@ -201,7 +214,7 @@ internal sealed partial class StudioForm
 
     private async Task<object> RunRename(Dictionary<string,object> message)
     {
-        if (renaming || momoCancellation != null || splitCancellation != null) throw new MomoError("另一個批次仍在執行。");
+        if (renaming || momoCancellation != null || splitCancellation != null || converting) throw new MomoError("另一個批次仍在執行。");
         if (!Directory.Exists(renameFolder)) throw new MomoError("請先選擇可用的輸出資料夾。");
         var options = new RenameBatch.Options {
             Name = message["name"] as string,

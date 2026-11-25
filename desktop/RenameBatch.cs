@@ -143,28 +143,10 @@ internal static class RenameBatch
         using (var image = OpenImage(source))
         {
             MomoBatch.ApplyOrientation(image);
-            bool jpeg = format == "jpg";
-            using (var frame = new Bitmap(image.Width,image.Height,jpeg ? PixelFormat.Format24bppRgb : PixelFormat.Format32bppArgb))
+            using (var output = new MemoryStream())
             {
-                using (var g = Graphics.FromImage(frame))
-                {
-                    g.CompositingMode = jpeg ? CompositingMode.SourceOver : CompositingMode.SourceCopy;
-                    g.Clear(jpeg ? Color.White : Color.Transparent);
-                    g.DrawImageUnscaled(image,0,0);
-                }
-                using (var output = new MemoryStream())
-                {
-                    if (jpeg)
-                    {
-                        using (var pars = new EncoderParameters(1))
-                        {
-                            pars.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality,94L);
-                            frame.Save(output,ImageCodecInfo.GetImageEncoders().First(codec=>codec.FormatID == ImageFormat.Jpeg.Guid),pars);
-                        }
-                    }
-                    else frame.Save(output,ImageFormat.Png);
-                    return output.ToArray();
-                }
+                ImageConvert.Encode(image,format,output);
+                return output.ToArray();
             }
         }
     }

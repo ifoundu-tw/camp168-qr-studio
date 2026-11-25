@@ -44,6 +44,7 @@
       }
     });
     if (globalThis.CampSplit) CampSplit.init(desktop,request,addDrop);
+    if (globalThis.CampConvert) CampConvert.init(desktop,request,addDrop);
     if (!desktop) {
       $('momoPick').disabled = true;
       $('momoFolder').disabled = true;

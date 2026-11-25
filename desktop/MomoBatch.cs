@@ -255,10 +255,14 @@ internal static class MomoBatch
         if (!image.PropertyIdList.Contains(Orientation)) return;
         var value = image.GetPropertyItem(Orientation).Value;
         if (value == null || value.Length < 2) return;
+        ApplyOrientation(image,BitConverter.ToUInt16(value,0));
+    }
+
+    internal static void ApplyOrientation(Image image,int index)
+    {
         var rotation = new[] { RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipNone,
             RotateFlipType.RotateNoneFlipX,RotateFlipType.Rotate180FlipNone,RotateFlipType.Rotate180FlipX,
             RotateFlipType.Rotate90FlipX,RotateFlipType.Rotate90FlipNone,RotateFlipType.Rotate270FlipX,RotateFlipType.Rotate270FlipNone };
-        int index = BitConverter.ToUInt16(value,0);
         if (index > 1 && index < rotation.Length) image.RotateFlip(rotation[index]);
     }
 

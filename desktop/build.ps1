@@ -6,7 +6,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $framework = Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319'
-$sources = @('Program.cs','UpdateService.cs','ToolBridge.cs','MomoBatch.cs','PsdComposite.cs','AdobeRaster.cs','RenameBatch.cs','ImageSplit.cs') |
+$sources = @('Program.cs','UpdateService.cs','ToolBridge.cs','MomoBatch.cs','PsdComposite.cs','AdobeRaster.cs','RenameBatch.cs','ImageSplit.cs','ImageConvert.cs','ConversionBridge.cs') |
     ForEach-Object { Join-Path $PSScriptRoot $_ }
 $dist = (Resolve-Path (Join-Path $PSScriptRoot '../dist')).Path
 $output = [IO.Path]::GetFullPath($OutputPath)
@@ -24,7 +24,7 @@ try {
     $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $WebView2Package).Path)
     $resources = @()
     $references = @(
-        '/reference:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll,System.Web.Extensions.dll,System.Net.Http.dll,Microsoft.CSharp.dll'
+        '/reference:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll,System.Web.Extensions.dll,System.Net.Http.dll,System.Xaml.dll,Microsoft.CSharp.dll'
         "/reference:$(Join-Path $framework 'WPF/WindowsBase.dll')"
         "/reference:$(Join-Path $framework 'WPF/PresentationCore.dll')"
     )

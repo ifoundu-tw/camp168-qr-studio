@@ -39,7 +39,7 @@
       $('splitPick').disabled = active;
       $('splitClear').disabled = $('splitRemove').disabled = active || !entries.size;
       $('splitFiles').disabled = active || !entries.size;
-      for (const id of ['splitMode','splitFirst','splitSecond','splitFolder','splitReset']) $(id).disabled = active;
+      for (const id of ['splitMode','splitFirst','splitSecond','splitFormat','splitFolder','splitReset']) $(id).disabled = active;
       $('splitStart').disabled = active || !entries.size || !settings();
       $('splitCancel').hidden = !active;
     }
@@ -165,13 +165,14 @@
       if (matchMedia('(max-width:699px),(max-height:540px)').matches)
         $('splitTool').querySelector('[data-tool-pane-target=preview]').click();
       try {
-        const result = await request('splitRun',{...config,ids:[...entries.keys()],shared});
+        const format = $('splitFormat').value;
+        const result = await request('splitRun',{...config,ids:[...entries.keys()],shared,format});
         $('splitProgress').value = result.completed;
         $('splitResultFolder').replaceChildren(...result.folders.map((folder,index)=>new Option(folder,index)));
         $('splitOpenRow').hidden = !result.folders.length;
         $('splitResultFolder').hidden = result.folders.length < 2;
         status('splitStatus',(result.cancelled ? '已停止。' : '批次完成。')+
-          ' 已處理 '+result.completed+'／'+entries.size+' 個來源，輸出 '+result.tiles+' 張 PNG，失敗 '+result.failed+' 項。');
+          ' 已處理 '+result.completed+'／'+entries.size+' 個來源，輸出 '+result.tiles+' 張 '+format.toUpperCase()+'，失敗 '+result.failed+' 項。');
       } catch (error) { status('splitStatus',error.message); }
       finally { active = false; updateActions(); }
     });

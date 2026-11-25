@@ -145,28 +145,31 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto}
 
 .tool-switcher{display:none;flex:none}
 .version-links{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
-#openChanges{min-height:0;padding:2px 6px;font-size:.75rem;line-height:1.4;color:#08142a;background:#ffdf70;border-color:#ffdf70;white-space:nowrap}
+#openChanges{min-height:0;padding:2px 6px;font-size:.75rem;line-height:1.4;color:#e1ebff;background:#08142a;border-color:#829cce;white-space:nowrap}
+#openChanges.fresh{color:#08142a;background:#ffdf70;border-color:#ffdf70}
 #changeDialog{width:min(490px,calc(100% - 24px))}
 #changeDialog .section-heading{position:sticky;top:-1px;background:white;z-index:1}
-#changeHistory section{border-top:1px solid var(--line);padding:9px 0}
-#changeHistory h3{margin:0 0 5px;font-size:.94rem}
-#changeHistory ul{margin:0;padding-left:1.35em;font-size:.88rem}
+#changeHistory ul{margin:0;border-top:1px solid var(--line);padding:9px 0 0 1.35em;font-size:.88rem}
 #changeHistory li+li{margin-top:3px}
-.image-switcher{display:flex;gap:5px;margin-bottom:7px;flex:none}
+.image-switcher{display:flex;gap:5px;margin-bottom:7px;flex:none;flex-wrap:wrap}
 .image-switcher button{min-height:30px;padding:4px 10px;font-size:.875rem}
 .image-switcher button[aria-pressed=true]{color:var(--brand);border-color:var(--brand);background:var(--pale)}
 .split-source{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:7px}
 .split-source select[hidden]+button{grid-column:1/-1;justify-self:start}
 .split-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 8px;margin-top:7px}
 .split-fields label:first-child{grid-column:1/-1}
-#splitDestination{font-size:.85rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+#splitDestination,#convertDestination{font-size:.85rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+#convertFiles{background-image:none;padding:4px 6px}
+#convertFiles option{padding:4px;white-space:normal}
+.convert-output>p:first-of-type{font-size:.85rem;color:var(--muted);margin-top:4px}
+#convertCancelNarrow{display:none}
 .split-output{min-width:0}
 .split-preview{display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:#e5ebf4;overflow:hidden}
 .split-preview svg{display:block;width:100%;height:clamp(96px,34dvh,320px)}
 .split-preview path{fill:none;vector-effect:non-scaling-stroke}
 #splitHalo{stroke:#101522;stroke-width:3}
 #splitLines{stroke:#fff;stroke-width:1.5;stroke-dasharray:5 3}
-#splitProgress{margin-top:6px;display:block;width:100%;height:10px;accent-color:var(--brand)}
+#splitProgress,#convertProgress{margin-top:6px;display:block;width:100%;height:10px;accent-color:var(--brand)}
 .tool-switcher button{padding:4px 7px;min-height:29px;font-size:.84rem}
 .tool-switcher button[aria-pressed=true]{border-color:var(--brand);color:var(--brand);background:var(--pale)}
 #momoResultFolder{margin-bottom:6px}
@@ -175,10 +178,12 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto}
   .momo-workspace{grid-template-columns:minmax(0,1fr)}
   .image-tool[data-tool-pane=input] .momo-output,.image-tool[data-tool-pane=output] .momo-input,
   .split-tool[data-tool-pane=input] .split-output,.split-tool[data-tool-pane=preview] .split-input,
+  .convert-tool[data-tool-pane=input] .convert-output,.convert-tool[data-tool-pane=output] .convert-input,
   .rename-tool[data-tool-pane=files] .rename-settings,.rename-tool[data-tool-pane=settings] .rename-toolbar,
   .rename-tool[data-tool-pane=settings] .rename-drop{display:none}
   .rename-settings{flex:1;min-height:0;overflow:auto;scrollbar-width:none}
   .rename-drop{min-height:0;margin-top:0}
+  #convertCancelNarrow:not([hidden]){display:inline-block}
   .rename-footer .momo-actions{margin-top:2px}
 }
 

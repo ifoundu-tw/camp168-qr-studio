@@ -127,7 +127,7 @@ internal static class ImageSplit
         public string[] folders;
     }
 
-    internal static Result Run(string[] files,string destination,string mode,int first,int second,
+    internal static Result Run(string[] files,string destination,string mode,int first,int second,string format,
         CancellationToken token,IProgress<Row> progress)
     {
         int completed = 0, tiles = 0, failed = 0;
@@ -142,11 +142,11 @@ internal static class ImageSplit
                 {
                     var plan = Layout(image.Width,image.Height,mode,first,second);
                     string parent = destination ?? Path.Combine(Path.GetDirectoryName(path),OutputFolder);
-                    row.folder = Save(image,plan,parent,Path.GetFileNameWithoutExtension(path),token);
+                    row.folder = Save(image,plan,parent,Path.GetFileNameWithoutExtension(path),format,token);
                     row.count = plan.count;
                     tiles += row.count;
                     folders.Add(row.folder);
-                    row.note = "已輸出 "+row.count+" 張 PNG。";
+                    row.note = "已輸出 "+row.count+" 張 "+format.ToUpperInvariant()+"。";
                 }
             }
             catch (OperationCanceledException) { break; }
@@ -158,7 +158,7 @@ internal static class ImageSplit
             cancelled = token.IsCancellationRequested, folders = folders.ToArray() };
     }
 
-    private static string Save(Image image,Plan plan,string parent,string name,CancellationToken token)
+    private static string Save(Image image,Plan plan,string parent,string name,string format,CancellationToken token)
     {
         Directory.CreateDirectory(parent);
         string staging = Path.Combine(parent,".camp168-"+Guid.NewGuid().ToString("N"));
@@ -171,9 +171,15 @@ internal static class ImageSplit
             {
                 token.ThrowIfCancellationRequested();
                 var crop = Rectangle.FromLTRB(plan.x[x-1],plan.y[y-1],plan.x[x],plan.y[y]);
-                string filename = name+"_"+(++number).ToString("D3",CultureInfo.InvariantCulture)+".png";
+                string filename = name+"_"+(++number).ToString("D3",CultureInfo.InvariantCulture)+"."+format;
                 using (var tile = Render(image,crop,crop.Width,crop.Height,InterpolationMode.NearestNeighbor))
-                    tile.Save(Path.Combine(staging,filename),ImageFormat.Png);
+                {
+                    using (var output = new FileStream(Path.Combine(staging,filename),FileMode.CreateNew,FileAccess.Write,FileShare.None))
+                    {
+                        if (format == "png") tile.Save(output,ImageFormat.Png);
+                        else ImageConvert.Encode(tile,format,output);
+                    }
+                }
             }
             for (int suffix=1;;suffix++)
             {
