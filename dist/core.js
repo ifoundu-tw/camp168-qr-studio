@@ -14,21 +14,24 @@
     font: 'sans', fontSize: 0, text: '', logo: '', x: 0, y: 0, frame: ''
   });
   const presets = [
-    {name:'純黑白', ink:'#000000'},
-    {name:'鈷藍', ink:'#00339e', outer:'soft', badge:'pill'},
-    {name:'深藍漸層', ink:'#00173f', ink2:'#005276', paint:'linear', outer:'soft', badge:'cut'},
-    {name:'皇家紫', ink:'#53008c', module:'soft', outer:'soft', badge:'oval'},
-    {name:'正紅', ink:'#9d001d', font:'serif'},
-    {name:'深琥珀', ink:'#753400', module:'soft', outer:'soft', font:'serif', badge:'oval'},
-    {name:'海軍藍', ink:'#001c56', font:'narrow', badge:'cut'},
-    {name:'墨綠', ink:'#004e2b', module:'soft', badge:'shield'},
-    {name:'靛藍圓點', ink:'#270070', module:'dot', outer:'soft', font:'mono', badge:'oval'},
-    {name:'黑橘', ink:'#000000', textColor:'#9d2d00', badge:'pill', font:'narrow'}
+    {name:'經典黑白', ink:'#000000', module:'square', outer:'square', inner:'square'},
+    {name:'Facebook', ink:'#3d5b96'},
+    {name:'Twitter', ink:'#000000'},
+    {name:'Pinterest', ink:'#cd3039'},
+    {name:'Wikipedia', ink:'#070707'},
+    {name:'LinkedIn', ink:'#1681b1'},
+    {name:'Viadeo', ink:'#df8644', eyeOuter:'#000000'},
+    {name:'Google Play', ink:'#2c9fd9', ink2:'#29cc5e', paint:'linear', angle:'diag'},
+    {name:'Instagram', ink:'#e95e2f', ink2:'#8080d9', paint:'linear', angle:'down', eyeOuter:'#696969'},
+    {name:'YouTube', ink:'#b31217', eyeOuter:'#414141', eyeInner:'#414141'},
+    {name:'Google 地圖', ink:'#7f7f7f', eyeOuter:'#434343', eyeInner:'#d82323'},
+    {name:'Wi-Fi', ink:'#070707'}
   ];
 
   function presetAt(index) {
     const {name, ...look} = presets[index];
-    return {...defaults, eyeOuter:look.ink, eyeInner:look.ink, textColor:look.ink, ...look};
+    return {...defaults, module:'dot', outer:'soft', inner:'soft',
+      eyeOuter:look.ink, eyeInner:look.ink, ...look};
   }
 
   function parseBatch(raw, base) {

@@ -1,12 +1,15 @@
-# CAMP168 QR／條碼工作台
+# 美工必備小工具 by yue
 
-由 yue 製作。Windows 單檔工具可批次產生 CAMP168 商品 QR Code，也可製作一維及二維條碼，並將每筆資料分別存成 PNG 或 SVG。
+由 yue 製作的 Windows 單檔工具，包含條碼生成、MOMO 圖片轉檔與批次重新命名。
 
 ## 使用方式
 
 1. 從 [GitHub Releases](https://github.com/ifoundu-tw/camp168-qr-studio/releases) 取得正式版 EXE。
 2. 在 64 位元 Windows 10／11 上開啟 EXE。程式使用 [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。
-3. 在「商品批次」貼上尾綴，或在「條碼／Barcode」選擇碼種並輸入資料。選好樣式與格式後，點選匯出。
+3. 頂端可切換三個工具：
+   - **條碼生成**：批次製作 CAMP168 商品 QR Code，或製作一維及二維條碼，個別匯出 PNG 或 SVG。
+   - **改圖轉檔**：加入 JPG、PNG、BMP、TIFF、PSD 或 AI，輸出 1000 × 1000 白底 JPG，每張嚴格小於 500,000 bytes。一般格式、可讀的 PSD 合成影像與部分含 PDF 內容的 AI 在本機轉檔；其餘 AI 或 PSD 由對應的 Adobe 軟體處理。
+   - **重新命名**：拖曳調整順序，設定檔名和編號，複製或移動到選定資料夾。可保留原格式或轉 JPG／PNG。
 
 程式啟動時會向本儲存庫的 GitHub Releases 檢查正式版。新版需由使用者確認後才會下載及安裝。編碼、預覽、匯出和圖檔辨識皆在本機處理。
 

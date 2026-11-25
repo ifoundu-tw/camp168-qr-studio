@@ -17,7 +17,6 @@ internal static class UpdateService
     private const string Repository = "ifoundu-tw/camp168-qr-studio";
     private const string LatestApi = "https://api.github.com/repos/" + Repository + "/releases/latest";
     private const string Releases = "https://github.com/" + Repository + "/releases/";
-    private const string Product = "CAMP168 QR 工作台";
     private const string EventPrefix = @"Local\Camp168QrUpdate-";
     private const long MaximumAsset = 128L * 1024 * 1024;
     private static readonly Regex ReleaseTag = new Regex(@"\Av[0-9]+\.[0-9]+\.[0-9]+\z", RegexOptions.CultureInvariant);
@@ -119,8 +118,8 @@ internal static class UpdateService
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            MessageBox.Show("無法開啟瀏覽器。請到 GitHub 的 CAMP168 QR 工作台發行頁面下載。",
-                "CAMP168 更新",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            MessageBox.Show("無法開啟瀏覽器。請到 GitHub 發行頁面下載。",
+                Program.DisplayName + " 更新",MessageBoxButtons.OK,MessageBoxIcon.Information);
         }
     }
 
@@ -206,7 +205,7 @@ internal static class UpdateService
                 string runningPath = parent.MainModule.FileName;
                 if (!String.Equals(target,runningPath,StringComparison.OrdinalIgnoreCase) ||
                     parent.StartTime.ToUniversalTime().Ticks != started ||
-                    FileVersionInfo.GetVersionInfo(target).ProductName != Product) return;
+                    FileVersionInfo.GetVersionInfo(target).ProductName != Program.UpdateProductName) return;
 
                 ValidateBinary(payload,args[6],version);
                 using (var ready = EventWaitHandle.OpenExisting(EventPrefix+id.ToString("N"))) ready.Set();
@@ -220,7 +219,7 @@ internal static class UpdateService
         {
             if (acknowledged)
                 MessageBox.Show("無法替換程式，請確認所有工作台視窗已關閉，且 EXE 所在資料夾可寫入。",
-                    "CAMP168 更新",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    Program.DisplayName + " 更新",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
     }
 
@@ -264,7 +263,7 @@ internal static class UpdateService
         var info = FileVersionInfo.GetVersionInfo(file);
         var actualVersion = new Version(info.FileMajorPart,info.FileMinorPart,info.FileBuildPart);
         if (!String.Equals(hash,actual,StringComparison.OrdinalIgnoreCase) ||
-            info.ProductName != Product || actualVersion != version)
+            info.ProductName != Program.UpdateProductName || actualVersion != version)
             throw new IOException("更新檔未通過完整性或版號檢查。");
     }
 

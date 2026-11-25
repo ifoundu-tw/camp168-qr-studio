@@ -54,14 +54,19 @@
     if (data.error) pending.reject(new UserError(data.error));
     else pending.resolve(data.value);
   });
-  function desktopRequest(action, argumentsForAction = {}) {
+  function desktopRequest(action, argumentsForAction = {}, files) {
     const id = ++requestId;
     return new Promise((resolve,reject) => {
       desktopRequests.set(id,{resolve,reject});
-      try { desktop.postMessage(JSON.stringify({id,action,...argumentsForAction})); }
+      try {
+        const message = JSON.stringify({id,action,...argumentsForAction});
+        if (files) desktop.postMessageWithAdditionalObjects(message,files);
+        else desktop.postMessage(message);
+      }
       catch (error) { desktopRequests.delete(id); reject(error); }
     });
   }
+  CampMomo.init(desktop,desktopRequest);
 
   const singleFields = {
     url: '<label>網址<input id="singleMain" type="url" placeholder="https://example.com"></label>',
@@ -125,6 +130,8 @@
   }
 
   function buildPresets() {
+    const [example] = core.parseBatch('ntg247',core.defaultBase).items;
+    const qr = core.makeEncoder(example.target,core.defaults);
     core.presets.forEach((preset, i) => {
       const button = document.createElement('button');
       button.type = 'button';
@@ -133,9 +140,13 @@
       const swatch = document.createElement('span');
       swatch.className = 'swatch';
       swatch.setAttribute('aria-hidden','true');
-      swatch.style.setProperty('--swatch', preset.ink);
-      swatch.style.setProperty('--round', preset.module === 'dot' ? '50%' : preset.module === 'soft' ? '35%' : '0');
-      for (let j=0; j<9; j++) swatch.append(document.createElement('span'));
+      swatch.innerHTML = core.svgFor(example,core.presetAt(i),null,qr);
+      // Gradient IDs must be unique when several SVG previews share the page.
+      const gradient = swatch.querySelector('defs > linearGradient');
+      if (gradient) {
+        gradient.id = 'preset-colors-'+i;
+        swatch.querySelector('[fill="url(#colors)"]').setAttribute('fill','url(#'+gradient.id+')');
+      }
       button.append(swatch);
       button.addEventListener('click', () => {
         const retained = {center:settings.center, text:settings.text, logo:settings.logo,
@@ -578,7 +589,7 @@
   });
 
   for (const el of barcodeControls) el.addEventListener('input',() => {
-    if (!el.validity.valid || el.value === '') return;
+    if (!el.validity.valid || (el.type === 'number' && el.value === '')) return;
     barcodeStyle[el.dataset.barcodeSetting] = barcodeControlValue(el);
     if (el.dataset.barcodeSetting === 'text') $('barcodeTextSettings').hidden = !barcodeStyle.text;
     render();

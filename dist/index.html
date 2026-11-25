@@ -5,22 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="在瀏覽器批次製作 CAMP168 商品 QR Code，自訂樣式並分別匯出 PNG 或 SVG。">
 <meta name="author" content="yue">
-<title>CAMP168 QR 工作台</title>
+<title>美工必備小工具 by yue</title>
 <link rel="stylesheet" href="style.css">
 <script src="vendor/qr.js" defer></script>
 <script src="vendor/bwip-js.js" defer></script>
 <script src="core.js" defer></script>
 <script src="barcode.js" defer></script>
+<script src="momo.js" defer></script>
+<script src="split.js" defer></script>
+<script src="rename.js" defer></script>
+<script src="changes.js" defer></script>
 <script src="app.js" defer></script>
 </head>
 <body>
 <header class="top">
   <div class="wrap top-inner">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">▦</span><span class="brand-copy"><span>CAMP168</span><small>／ QR 工作台</small><span class="author">by yue</span><span class="app-version" id="appVersion" hidden></span></span></div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">▦</span><span class="brand-copy"><span>美工必備小工具</span><span class="author">by yue</span><span class="version-links"><span class="app-version" id="appVersion" hidden></span><button id="openChanges" type="button" aria-haspopup="dialog" hidden>新功能!!</button></span></span></div>
     <button class="scan-trigger" id="openScan" type="button">掃描圖檔</button>
   </div>
 </header>
+<dialog id="changeDialog" aria-labelledby="changeTitle">
+  <div class="section-heading"><h2 id="changeTitle">版本更新日誌</h2><form method="dialog"><button type="submit" autofocus>關閉</button></form></div>
+  <div id="changeHistory"></div>
+</dialog>
 <main class="wrap app-shell" data-pane="content">
+  <nav class="category-switcher" aria-label="工具類型">
+    <button type="button" data-category="codes" aria-pressed="true">條碼生成</button>
+    <button type="button" data-category="images" aria-pressed="false">改圖轉檔</button>
+    <button type="button" data-category="rename" aria-pressed="false">重新命名</button>
+  </nav>
+  <div id="codesTool" class="tool-view">
   <div class="hero"><h1>QR Code 與條碼工作台</h1><p>批次製作 CAMP168 商品 QR Code，或匯出一維與二維條碼。</p></div>
   <nav class="pane-switcher" aria-label="工作台區域">
     <button type="button" data-pane-target="content" aria-pressed="true">內容</button>
@@ -149,6 +163,112 @@ ntg102</textarea>
       </div>
     </aside>
   </div>
+  </div>
+  <section id="imageTool" class="tool-view" hidden>
+    <nav class="image-switcher" aria-label="改圖轉檔功能">
+      <button type="button" data-image-tool="momoTool" aria-pressed="true">MOMO 圖片批次</button>
+      <button type="button" data-image-tool="splitTool" aria-pressed="false">圖片拆分</button>
+    </nav>
+  <section id="momoTool" class="tool-view image-tool" data-tool-pane="input">
+    <div class="hero"><h1>MOMO 圖片批次</h1><p>1000 × 1000 JPG · 等比例置中補白 · 低於 500,000 bytes</p></div>
+    <nav class="tool-switcher" aria-label="圖片工作區">
+      <button type="button" data-tool-pane-target="input" aria-pressed="true">來源圖片</button>
+      <button type="button" data-tool-pane-target="output" aria-pressed="false">輸出與結果</button>
+    </nav>
+    <div class="momo-workspace">
+      <section class="panel momo-input">
+        <div class="section-heading"><h2>來源圖片</h2><button type="button" id="momoClear" class="plain">清除清單</button></div>
+        <div class="momo-drop" id="momoDrop">
+          <button type="button" id="momoPick">加入圖片</button>
+          <p>也可以拖放 AI、PSD、JPG、PNG、BMP、TIFF</p>
+        </div>
+        <div class="momo-file-head"><strong id="momoCount">0 張</strong><button type="button" id="momoRemove" class="plain" disabled>移除選取</button></div>
+        <select id="momoFiles" aria-label="來源圖片清單" multiple size="6"></select>
+        <p id="momoInputStatus" class="message" role="status" hidden></p>
+      </section>
+      <section class="panel momo-output">
+        <div class="section-heading"><h2>輸出與處理結果</h2></div>
+        <div class="momo-config">
+          <label for="momoMode">處理方式</label>
+          <select id="momoMode"><option value="auto">自動（Windows 本機優先）</option><option value="photoshop">沿用 Photoshop JPG 輸出</option></select>
+          <div class="momo-destination"><button type="button" id="momoFolder">選擇輸出資料夾</button><button type="button" id="momoResetFolder" class="plain" hidden>使用預設</button></div>
+          <p id="momoDestination">各來源資料夾內的 MOMO 子資料夾</p>
+        </div>
+        <div class="momo-actions"><button type="button" class="primary" id="momoStart" disabled>開始處理</button><button type="button" id="momoCancel" hidden>停止後續檔案</button></div>
+        <progress id="momoProgress" max="1" value="0" aria-label="處理進度"></progress>
+        <p id="momoStatus" class="message" role="status">加入圖片後即可開始。</p>
+        <ul id="momoResults" class="momo-results" aria-label="處理結果"></ul>
+        <select id="momoResultFolder" aria-label="選擇輸出資料夾" hidden></select>
+        <button type="button" id="momoOpen" hidden>開啟輸出資料夾</button>
+      </section>
+    </div>
+  </section>
+  <section id="splitTool" class="tool-view split-tool" data-tool-pane="input" hidden>
+    <nav class="tool-switcher" aria-label="圖片拆分工作區">
+      <button type="button" data-tool-pane-target="input" aria-pressed="true">來源與設定</button>
+      <button type="button" data-tool-pane-target="preview" aria-pressed="false">預覽與結果</button>
+    </nav>
+    <div class="momo-workspace">
+      <section class="panel split-input">
+        <div class="section-heading"><h2>來源與拆分設定</h2><button type="button" id="splitClear" class="plain" disabled>清除清單</button></div>
+        <div class="momo-drop" id="splitDrop"><button type="button" id="splitPick">加入圖片</button><p>可批次拖放 JPG、PNG、BMP、GIF、TIFF</p></div>
+        <div class="split-source"><select id="splitFiles" aria-label="選擇要預覽的來源圖片" disabled><option>尚未加入圖片</option></select><button type="button" id="splitRemove" class="plain" disabled>移除</button></div>
+        <p id="splitInputStatus" class="message" role="status" hidden></p>
+        <div class="split-fields">
+          <label>拆分方式<select id="splitMode"><option value="horizontal">水平均分（切欄）</option><option value="vertical">垂直均分（切列）</option><option value="pixels">像素拆分</option><option value="grid">等比均分（欄 × 列）</option></select></label>
+          <label><span id="splitFirstLabel">水平份數</span><input id="splitFirst" type="number" min="1" max="2147483647" step="1" value="2"></label>
+          <label id="splitSecondField" hidden><span id="splitSecondLabel">列數</span><input id="splitSecond" type="number" min="1" max="2147483647" step="1" value="2"></label>
+        </div>
+        <div class="momo-destination"><button type="button" id="splitFolder">選擇輸出資料夾</button><button type="button" id="splitReset" class="plain" hidden>使用預設</button></div>
+        <p id="splitDestination">各來源資料夾內的「圖片拆分」子資料夾</p>
+        <div class="momo-actions"><button type="button" class="primary" id="splitStart" disabled>批次拆分 PNG</button><button type="button" id="splitCancel" hidden>停止拆分</button></div>
+      </section>
+      <section class="panel split-output">
+        <div class="section-heading"><h2>切線預覽</h2></div>
+        <div class="split-preview" id="splitPreview" role="img" aria-label="圖片切線預覽" hidden>
+          <svg id="splitCanvas" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <image id="splitImage" preserveAspectRatio="none"></image>
+            <path id="splitHalo"></path><path id="splitLines"></path>
+          </svg>
+        </div>
+        <p id="splitPreviewStatus" class="message" role="status">加入圖片即可預覽切線。</p>
+        <progress id="splitProgress" max="1" value="0" aria-label="拆分進度" hidden></progress>
+        <p id="splitStatus" class="message" role="status" hidden></p>
+        <ul id="splitResults" class="momo-results" aria-label="拆分結果" hidden></ul>
+        <div class="split-source" id="splitOpenRow" hidden><select id="splitResultFolder" aria-label="選擇拆分結果資料夾"></select><button type="button" id="splitOpen">開啟資料夾</button></div>
+      </section>
+    </div>
+  </section>
+  </section>
+  <section id="renameTool" class="tool-view rename-tool" data-tool-pane="files" hidden>
+    <div class="hero"><h1>批次重新命名</h1><p>拖曳檔案調整順序，即時預覽新檔名。</p></div>
+    <nav class="tool-switcher" aria-label="重新命名工作區">
+      <button type="button" data-tool-pane-target="files" aria-pressed="true">檔案順序</button>
+      <button type="button" data-tool-pane-target="settings" aria-pressed="false">命名設定</button>
+    </nav>
+    <section class="panel rename-settings">
+      <div class="rename-fields">
+        <label>自訂名稱<input id="renameStem" type="text" value="商品圖片" maxlength="120"></label>
+        <label>編號位數<select id="renameDigits"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+        <label>檔名格式<select id="renamePattern"><option value="number_">編號_名稱</option><option value="name_">名稱_編號</option><option value="number-">編號-名稱</option><option value="name-">名稱-編號</option></select></label>
+        <label>輸出模式<select id="renameMode"><option value="copy">複製（保留原檔）</option><option value="move">移動（移除原檔）</option></select></label>
+        <label>輸出格式<select id="renameFormat"><option value="keep">保留原始格式</option><option value="jpg">全部轉 JPG</option><option value="png">全部轉 PNG</option></select></label>
+      </div>
+    </section>
+    <div class="rename-toolbar"><button type="button" id="renamePick">加入檔案</button><button type="button" id="renameClear" class="plain">清除清單</button><strong id="renameCount">0 個</strong></div>
+    <div id="renameDrop" class="rename-drop">
+      <p id="renameEmpty">拖入圖片或其他檔案</p>
+      <ol id="renameCards" class="rename-cards" aria-label="重新命名順序"></ol>
+    </div>
+    <section class="panel rename-footer">
+      <div class="rename-destination">
+        <button type="button" id="renameFolder">選擇輸出資料夾</button>
+        <p id="renameFolderName">尚未選擇</p>
+      </div>
+      <div class="momo-actions"><button type="button" id="renameOpen" hidden>開啟資料夾</button><button type="button" class="primary" id="renameStart" disabled>一鍵輸出</button></div>
+      <p id="renameStatus" class="message" role="status">加入檔案後即可開始。</p>
+    </section>
+  </section>
 </main>
 <dialog id="scanDialog">
   <form method="dialog" class="section-heading"><h2>掃描條碼圖檔</h2><button type="submit">關閉</button></form>

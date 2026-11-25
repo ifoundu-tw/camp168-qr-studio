@@ -15,14 +15,17 @@ using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
-[assembly: AssemblyTitle("CAMP168 QR 工作台")]
-[assembly: AssemblyProduct("CAMP168 QR 工作台")]
+[assembly: AssemblyTitle(Program.DisplayName)]
+[assembly: AssemblyProduct(Program.UpdateProductName)]
 [assembly: AssemblyCompany("yue")]
 [assembly: AssemblyCopyright("by yue")]
-[assembly: AssemblyVersion("1.8.0.0")]
+[assembly: AssemblyVersion("1.11.0.0")]
 
 internal static class Program
 {
+    internal const string DisplayName = "美工必備小工具 by yue";
+    // Older installers require this exact product name when validating a new binary.
+    internal const string UpdateProductName = "CAMP168 QR 工作台";
     private static readonly Assembly Executable = Assembly.GetExecutingAssembly();
     internal static readonly Version CurrentVersion = Executable.GetName().Version;
     internal static readonly string AppData = Path.Combine(
@@ -59,8 +62,8 @@ internal static class Program
         }
         catch (Exception error)
         {
-            MessageBox.Show("無法啟動 CAMP168 QR 工作台。\n\n" + error.GetBaseException().Message,
-                "CAMP168 QR 工作台", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("無法啟動程式。\n\n" + error.GetBaseException().Message,
+                DisplayName, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -115,12 +118,12 @@ internal static class Program
     }
 }
 
-internal sealed class StudioForm : Form
+internal sealed partial class StudioForm : Form
 {
     private const string Origin = "https://camp168-qr.local/";
     private readonly WebView2 view = new WebView2 { Dock = DockStyle.Fill };
     private readonly Label loading = new Label {
-        Dock = DockStyle.Fill, Text = "正在啟動 QR 工作台…", TextAlign = ContentAlignment.MiddleCenter
+        Dock = DockStyle.Fill, Text = "正在啟動美工必備小工具…", TextAlign = ContentAlignment.MiddleCenter
     };
     private readonly JavaScriptSerializer json = new JavaScriptSerializer { MaxJsonLength = 32 * 1024 * 1024 };
     private string exportFolder;
@@ -128,7 +131,7 @@ internal sealed class StudioForm : Form
 
     public StudioForm()
     {
-        Text = "CAMP168 QR 工作台  v" + Program.CurrentVersion.ToString(3);
+        Text = Program.DisplayName + "  v" + Program.CurrentVersion.ToString(3);
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(370, 410);
         ClientSize = new Size(1000, 720);
@@ -164,14 +167,19 @@ internal sealed class StudioForm : Form
                 var url = new Uri(eventArgs.Request.Uri);
                 if (url.Scheme != Uri.UriSchemeHttps && url.Scheme != Uri.UriSchemeHttp) return;
                 var path = url.AbsolutePath;
-                var stream = IsAppUri(url) ? Program.OpenResource("ui" + path) : null;
+                string mime = ContentType(path);
+                Stream stream = null;
+                if (IsAppUri(url))
+                    stream = path.StartsWith("/tool-image/",StringComparison.Ordinal)
+                        ? OpenToolImage(path.Substring("/tool-image/".Length),out mime)
+                        : Program.OpenResource("ui" + path);
                 if (stream == null)
                 {
                     eventArgs.Response = environment.CreateWebResourceResponse(null, 404, "Not Found", "");
                     return;
                 }
                 eventArgs.Response = environment.CreateWebResourceResponse(stream, 200, "OK",
-                    "Content-Type: " + ContentType(path) + "\r\nX-Content-Type-Options: nosniff");
+                    "Content-Type: " + mime + "\r\nX-Content-Type-Options: nosniff");
             };
             web.NavigationStarting += delegate(object sender, CoreWebView2NavigationStartingEventArgs eventArgs)
             {
@@ -203,7 +211,7 @@ internal sealed class StudioForm : Form
         }
         catch (Exception error)
         {
-            MessageBox.Show("無法載入 QR 工作台。\n\n" + error.GetBaseException().Message, Text,
+            MessageBox.Show("無法載入程式。\n\n" + error.GetBaseException().Message, Text,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
@@ -219,7 +227,7 @@ internal sealed class StudioForm : Form
         message += release.CanInstall
             ? "\n\n更新時工作台會關閉並重新開啟。要立即更新嗎？"
             : "\n\n要開啟 GitHub 發行頁面查看下載嗎？";
-        if (MessageBox.Show(this, message, "CAMP168 更新", MessageBoxButtons.YesNo,
+        if (MessageBox.Show(this, message, Program.DisplayName + " 更新", MessageBoxButtons.YesNo,
             MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
         if (!release.CanInstall)
         {
@@ -238,7 +246,7 @@ internal sealed class StudioForm : Form
         {
             if (!IsDisposed && MessageBox.Show(this,
                 "無法完成自動更新。請確認網路連線和目前 EXE 資料夾的寫入權限。\n\n要開啟 GitHub 發行頁面嗎？",
-                "CAMP168 更新", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+                Program.DisplayName + " 更新", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
                 MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                 UpdateService.OpenReleasePage(release);
         }
@@ -279,7 +287,7 @@ internal sealed class StudioForm : Form
         }
     }
 
-    private void OnMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+    private async void OnMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
         Uri origin;
         if (!Uri.TryCreate(e.Source, UriKind.Absolute, out origin) || !IsAppUri(origin)) return;
@@ -299,7 +307,9 @@ internal sealed class StudioForm : Form
                     var data = (string)message["data"];
                     result = SaveToFolder(name, data);
                     break;
-                default: throw new InvalidOperationException("無法辨識此操作。");
+                default:
+                    result = await HandleToolMessage(message,e);
+                    break;
             }
             Reply(new { id, value = result });
         }
@@ -307,7 +317,7 @@ internal sealed class StudioForm : Form
         {
             if (id != 0)
             {
-                var message = error is UnauthorizedAccessException
+                var message = error is MomoError ? error.Message : error is UnauthorizedAccessException
                     ? "沒有寫入這個資料夾的權限，請改選其他位置。"
                     : error is IOException
                         ? "無法寫入圖檔，請確認資料夾仍可使用且磁碟有足夠空間。"
@@ -371,6 +381,6 @@ internal sealed class StudioForm : Form
 
     private void Reply(object response)
     {
-        view.CoreWebView2.PostWebMessageAsJson(json.Serialize(response));
+        if (!IsDisposed && view.CoreWebView2 != null) view.CoreWebView2.PostWebMessageAsJson(json.Serialize(response));
     }
 }
