@@ -19,7 +19,7 @@ using Microsoft.Web.WebView2.WinForms;
 [assembly: AssemblyProduct(Program.UpdateProductName)]
 [assembly: AssemblyCompany("yue")]
 [assembly: AssemblyCopyright("by yue")]
-[assembly: AssemblyVersion("1.12.0.0")]
+[assembly: AssemblyVersion("1.12.1.0")]
 
 internal static class Program
 {
@@ -132,6 +132,8 @@ internal sealed partial class StudioForm : Form
     public StudioForm()
     {
         Text = Program.DisplayName + "  v" + Program.CurrentVersion.ToString(3);
+        using (var iconFile = Program.OpenResource("ui/app-icon.ico"))
+            Icon = new Icon(iconFile);
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(370, 410);
         ClientSize = new Size(1000, 720);
@@ -292,6 +294,7 @@ internal sealed partial class StudioForm : Form
             case ".html": return "text/html; charset=utf-8";
             case ".css": return "text/css; charset=utf-8";
             case ".js": return "text/javascript; charset=utf-8";
+            case ".ico": return "image/x-icon";
             default: return "text/plain; charset=utf-8";
         }
     }

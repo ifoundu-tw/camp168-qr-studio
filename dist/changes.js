@@ -1,11 +1,10 @@
 (function () {
   'use strict';
-  const publishedAt = Date.parse('2026-11-25T19:03:51+08:00');
+  const publishedAt = Date.parse('2026-11-25T19:12:56+08:00');
   const highlightEndsAt = publishedAt + 7*24*60*60*1000;
   const notes = [
-    '【改圖轉檔】新增【通用圖片轉檔】，可批次轉換 HEIC、WebP、SVG 和其他可解碼的圖片。',
-    '通用圖片轉檔與圖片拆分都可以選擇 JPG 或 PNG。PNG 保留透明度，JPG 把透明區域補白。',
-    '日誌顯示目前版本，並在新版推出的一週內亮起【新功能!!】。'
+    'MOMO 圖片批次和圖片拆分新增【看示範】，可播放原圖到輸出的動畫。',
+    '程式圖示換成綠色鱷魚玩偶。'
   ];
 
   const version = globalThis.camp168AppVersion;

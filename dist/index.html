@@ -7,6 +7,8 @@
 <meta name="author" content="yue">
 <title>美工必備小工具 by yue</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="image-demo.css">
+<link rel="icon" href="app-icon.ico">
 <script src="vendor/qr.js" defer></script>
 <script src="vendor/bwip-js.js" defer></script>
 <script src="core.js" defer></script>
@@ -14,6 +16,7 @@
 <script src="momo.js" defer></script>
 <script src="convert.js" defer></script>
 <script src="split.js" defer></script>
+<script src="image-demo.js" defer></script>
 <script src="rename.js" defer></script>
 <script src="changes.js" defer></script>
 <script src="app.js" defer></script>
@@ -21,7 +24,7 @@
 <body>
 <header class="top">
   <div class="wrap top-inner">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">▦</span><span class="brand-copy"><span>美工必備小工具</span><span class="author">by yue</span><span class="version-links"><span class="app-version" id="appVersion" hidden></span><button id="openChanges" type="button" aria-haspopup="dialog" hidden>新功能!!</button></span></span></div>
+    <div class="brand"><img class="brand-mark" src="app-icon.ico" alt=""><span class="brand-copy"><span>美工必備小工具</span><span class="author">by yue</span><span class="version-links"><span class="app-version" id="appVersion" hidden></span><button id="openChanges" type="button" aria-haspopup="dialog" hidden>新功能!!</button></span></span></div>
     <button class="scan-trigger" id="openScan" type="button">掃描圖檔</button>
   </div>
 </header>
@@ -29,6 +32,42 @@
   <div class="section-heading"><h2 id="changeTitle">版本更新日誌</h2><form method="dialog"><button type="submit" autofocus>關閉</button></form></div>
   <div id="changeHistory"></div>
 </dialog>
+<dialog id="imageDemo" aria-labelledby="imageDemoTitle">
+  <div class="section-heading"><h2 id="imageDemoTitle"></h2><form method="dialog"><button type="submit" autofocus>關閉</button></form></div>
+  <div id="imageDemoStage"></div>
+  <div class="image-demo-actions"><button type="button" id="imageDemoReplay"><span aria-hidden="true">▶</span> 再播一次</button></div>
+</dialog>
+<template id="momoDemoTemplate">
+  <div class="image-demo-momo" role="img" aria-label="橫式帳篷、直式露營燈與正方形椅子，等比例置中補白後，全部變成正方形。">
+    <div class="image-demo-row">
+      <span aria-hidden="true">原圖縮圖</span>
+      <div class="image-demo-thumbnails" aria-hidden="true">
+        <span class="image-demo-frame"><span class="image-demo-photo tent wide"></span></span>
+        <span class="image-demo-frame"><span class="image-demo-photo lantern tall"></span></span>
+        <span class="image-demo-frame"><span class="image-demo-photo chair"></span></span>
+      </div>
+    </div>
+    <div class="image-demo-row">
+      <span aria-hidden="true">輸出預覽</span>
+      <div class="image-demo-thumbnails image-demo-output" aria-hidden="true">
+        <span class="image-demo-frame"><span class="image-demo-photo tent wide"></span></span>
+        <span class="image-demo-frame"><span class="image-demo-photo lantern tall"></span></span>
+        <span class="image-demo-frame"><span class="image-demo-photo chair"></span></span>
+      </div>
+    </div>
+  </div>
+  <p class="image-demo-caption">等比例置中補白，輸出 1000 × 1000 JPG。</p>
+</template>
+<template id="splitDemoTemplate">
+  <div class="image-demo-split" role="img" aria-label="一張帳篷圖加上貼齊邊緣的水平和垂直切線，再分離成四張圖。">
+    <div class="image-demo-tile"><span class="image-demo-photo tent"></span></div>
+    <div class="image-demo-tile"><span class="image-demo-photo tent"></span></div>
+    <div class="image-demo-tile"><span class="image-demo-photo tent"></span></div>
+    <div class="image-demo-tile"><span class="image-demo-photo tent"></span></div>
+    <div class="image-demo-guides" aria-hidden="true"></div>
+  </div>
+  <p class="image-demo-caption">2 欄 × 2 列 → 4 張 JPG 或 PNG。</p>
+</template>
 <main class="wrap app-shell" data-pane="content">
   <nav class="category-switcher" aria-label="工具類型">
     <button type="button" data-category="codes" aria-pressed="true">條碼生成</button>
@@ -172,7 +211,10 @@ ntg102</textarea>
       <button type="button" data-image-tool="convertTool" aria-pressed="false">通用圖片轉檔</button>
     </nav>
   <section id="momoTool" class="tool-view image-tool" data-tool-pane="input">
-    <div class="hero"><h1>MOMO 圖片批次</h1><p>1000 × 1000 JPG · 等比例置中補白 · 低於 500,000 bytes</p></div>
+    <div class="hero">
+      <div class="image-demo-heading"><h1>MOMO 圖片批次</h1><button type="button" class="image-demo-trigger" data-image-demo="momo" aria-haspopup="dialog"><span aria-hidden="true">▶</span> 看示範</button></div>
+      <p>1000 × 1000 JPG · 等比例置中補白 · 低於 500,000 bytes</p>
+    </div>
     <nav class="tool-switcher" aria-label="圖片工作區">
       <button type="button" data-tool-pane-target="input" aria-pressed="true">來源圖片</button>
       <button type="button" data-tool-pane-target="output" aria-pressed="false">輸出與結果</button>
@@ -206,6 +248,7 @@ ntg102</textarea>
     </div>
   </section>
   <section id="splitTool" class="tool-view split-tool" data-tool-pane="input" hidden>
+    <div class="hero image-demo-heading"><h1>圖片拆分</h1><button type="button" class="image-demo-trigger" data-image-demo="split" aria-haspopup="dialog"><span aria-hidden="true">▶</span> 看示範</button></div>
     <nav class="tool-switcher" aria-label="圖片拆分工作區">
       <button type="button" data-tool-pane-target="input" aria-pressed="true">來源與設定</button>
       <button type="button" data-tool-pane-target="preview" aria-pressed="false">預覽與結果</button>

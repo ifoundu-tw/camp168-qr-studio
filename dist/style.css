@@ -145,6 +145,7 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto}
 
 .tool-switcher{display:none;flex:none}
 .version-links{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+img.brand-mark{object-fit:contain;background:#fff;flex:none}
 #openChanges{min-height:0;padding:2px 6px;font-size:.75rem;line-height:1.4;color:#e1ebff;background:#08142a;border-color:#829cce;white-space:nowrap}
 #openChanges.fresh{color:#08142a;background:#ffdf70;border-color:#ffdf70}
 #changeDialog{width:min(490px,calc(100% - 24px))}

@@ -43,7 +43,8 @@ try {
         $resources += "/resource:$($asset.FullName),ui$relative"
     }
     $options = @(
-        '/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/codepage:65001', "/out:$output"
+        '/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/codepage:65001', "/out:$output",
+        "/win32icon:$(Join-Path $dist 'app-icon.ico')"
     )
     if ($Qa) { $options += '/define:QA' }
     & (Join-Path $framework 'csc.exe') @options @references @resources @sources
